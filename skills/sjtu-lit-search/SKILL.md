@@ -157,6 +157,16 @@ Return in this order, compactly:
 
 Write the full report to a file when it exceeds ~30 lines in chat; leave the summary and the file path in the reply.
 
+## 7. Archive and import (Zotero-first)
+
+A run is not finished when the report is written; the kept papers have to land somewhere reusable.
+
+- **Tier every kept paper**: `T1` core (baseline or direct competitor — must cite), `T2` support (method or adjacent field), `T3` background (context, surveys, further reading). One line of reason per paper: venue tier, citations, directness, open-access status, retraction check from `paper_get`.
+- **Manifest first**: write `lit-imports/<topic>-<YYYYMMDD>/manifest.json` (plus `.csv`) with DOI/arXiv id, title, year, venue, tier, tags, reason, open-access link. Everything else is generated from it, so re-runs are idempotent — skip any DOI already in the manifest.
+- **Zotero is the hub** (it is also how 小绿鲸 reads: its `createZoteroData.js` opens `zotero.sqlite`). If Zotero is installed with its local API enabled **and** the plugin's `zoteroWrite` setting is on: `zotero_add` each DOI/arXiv id (duplicates are reported, not duplicated), `zotero_organize` to create the collection `LitSearch/<topic>-<YYYYMMDD>` with tags `lit:T1|T2|T3` and `lit:<topic>`, then `zotero_note` with the tier reason.
+- **Without Zotero**: export `import.ris` (and `import.bib`) with `paper_cite` into the same folder, download open-access PDFs to `papers/`, and tell the user to import manually. Never edit 小绿鲸's database.
+- **Report the counts from tool output** — added / already present / failed — and never write "imported" without them. Writes are optional and switchable; do not delete or overwrite existing library items.
+
 ## Guardrails
 
 - Never invent a reference, DOI, page number, or BibTeX entry. Volumes and pages come from `paper_cite`/`zotero_export`.
