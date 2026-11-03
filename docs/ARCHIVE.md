@@ -71,7 +71,26 @@ lit-imports/<topic>-<YYYYMMDD>/
 
 **何时才需要新插件**：需要无人值守（定时跑、检索完自动导入）、或需要读取 小绿鲸 的 `zotero.sqlite` 反查已读状态时。那时写一个 host 插件：监听 manifest → 调 Zotero 本地 API（`http://127.0.0.1:23119/api/users/0/...`，带 `Zotero-Allowed-Request` 头）→ 生成 RIS；仍不直接改 小绿鲸 数据库（避免破坏其数据）。
 
-## 8. 风险与边界
+## 8. 管线验证记录（2026-11-03，实测通过）
+
+环境：Zotero 安装在 `D:\ProgramData\zotero`，profile `%APPDATA%\Zotero\Zotero\Profiles\2o4cxx4d.default\prefs.js`；插件 `@copylee/dsh-academic 0.5.1`。
+
+| 步骤 | 结果 |
+|---|---|
+| 本地 API | 初始 `403 Local API is not enabled`；写入 `extensions.zotero.httpServer.localAPI.enabled=true` 并重启后 `GET /api/users/0/items` 返回 `200 []` |
+| 建分类 | `LitSearch`（`zotero://user/0/collection/TI3S5UFG`）→ 子分类 `map-matching-unmodeled-states-20261103`（`JSIBF6QV`，5 items） |
+| 入库 | 5 篇全部 added（2 期刊、1 会议、2 预印本），DOI 未重复 |
+| 分级标签 | `lit:T1` ×3、`lit:T2` ×1、`lit:T3` ×1，另一个公共标签 `lit:map-matching`、`lit:2026-11` |
+| 笔记 | 在 Nicosia 条目下建分级理由笔记 `4FGBPI48` |
+| 回读 | `zotero_search tags=["lit:T1"]` 返回 3 篇，DOI/标签一致 |
+
+结论：**技能 §7 描述的管线可运行**。剩余一步是 小绿鲸 侧的读取：它通过 `createZoteroData.js` 读 `zotero.sqlite`，需在 小绿鲸 UI 里触发“从 Zotero 导入”；本仓库不改它的数据库。
+
+回滚方式：删除分类 `LitSearch / map-matching-unmodeled-states-20261103` 即可清除本次 5 条测试记录；Zotero prefs 的备份在同目录 `prefs.js.bak-20261103`。
+
+
+
+## 9. 风险与边界
 
 - Zotero 未安装时整条链不成立：先装再谈自动入库。
 - 插件文档里的“Zotero 10”与实际版本号可能不一致，安装前先核对；若写入不可用，退回 RIS。
