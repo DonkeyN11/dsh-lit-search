@@ -34,7 +34,15 @@ Check before promising anything:
 
 **Hand human checks to the user, never around them.** When a window shows a CAPTCHA, a Cloudflare/CloudFront challenge, or a login page, stop, say which window needs attention, and wait. Do not retry in a loop, do not switch source silently, and do not attempt to defeat the check.
 
-**Concurrency.** Parallelise **API** work — several searches at once is fine and subagents help there. Do **not** parallelise browser work: one Chrome profile holds the institutional login, concurrent drivers collide over that profile, and several simultaneous queries from one campus IP raise the bot-detection level for all of them. Queue browser lookups one at a time and narrate each step, so the user can watch and answer a check when one appears.
+**Concurrency — measured 2026-11-03.** Subagents *do* inherit the full `bcdp_*` surface: a child session returned `ok:true / available:true` from `bcdp_status` and completed a real `bcdp_navigate` to `example.com`. Parallel browser work is therefore possible, but bound it:
+
+- **API queries**: parallelise freely, any number of subagents — no shared state, no bot wall.
+- **Browser work**: at most **2** concurrent sessions, each in its own task space (`bcdp_space`), and on **different** sites. The Chrome profile and the campus IP are shared, so every extra stream raises the bot-detection level for all of them.
+- **Within one site, stay serial**: one query at a time, wait for the result before the next.
+- Every browser-driving subagent must report the URL it is about to open, and must **stop and report** on a CAPTCHA, a 403/202 challenge, or a login page instead of retrying. The Lead names that window and hands it to the user.
+- More than two browser tasks: queue them, do not open more windows. Watching the process and answering checks is the point — a wall of windows defeats both.
+
+
 
 
 
