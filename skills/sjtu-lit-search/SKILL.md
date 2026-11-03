@@ -21,7 +21,22 @@ Check before promising anything:
 - **The library catalogue** (`lib.sjtu.edu.cn`) is a JavaScript app with no public search API: use the browser, the 数据库 A–Z list and OPAC, and hand any login or human check to the user.
 - Chinese-language literature is mostly missing from the open indexes — plan a CNKI pass from the start, not as an afterthought.
 
-## 1. Decompose the topic (two layers)
+## 0b. Channel policy and concurrency
+
+**API where an API exists; browser where the wall is.** Routing everything through a browser is slower, loses structured metadata and pagination, and burns the user's screen for sources that answer a plain HTTP request.
+
+| Source | Channel | Why |
+|---|---|---|
+| OpenAlex, Crossref, PubMed, Europe PMC, DBLP, Semantic Scholar | `paper_*` API | real APIs, structured records, fast |
+| arXiv | `paper_*` API, **serialised** | rate-limited, not bot-walled |
+| Google Scholar, CNKI | plugin browser window, **one query at a time** | no public API |
+| IEEE Xplore, Elsevier, Wiley, Springer, ACM full text; SJTU catalogue | **browser with the user's session** | campus-IP entitlement + bot walls |
+
+**Hand human checks to the user, never around them.** When a window shows a CAPTCHA, a Cloudflare/CloudFront challenge, or a login page, stop, say which window needs attention, and wait. Do not retry in a loop, do not switch source silently, and do not attempt to defeat the check.
+
+**Concurrency.** Parallelise **API** work — several searches at once is fine and subagents help there. Do **not** parallelise browser work: one Chrome profile holds the institutional login, concurrent drivers collide over that profile, and several simultaneous queries from one campus IP raise the bot-detection level for all of them. Queue browser lookups one at a time and narrate each step, so the user can watch and answer a check when one appears.
+
+
 
 - **Layer 1 — application domains**: 2–4 concrete settings (e.g. urban canyon GNSS, map matching, lane-level mapping).
 - **Layer 2 — research challenges**: 3–5 problems per domain (e.g. calibration of posteriors, integrity risk, failure detection).
