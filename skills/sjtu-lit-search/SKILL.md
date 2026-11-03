@@ -8,7 +8,23 @@ description: >-
 
 A search is an evidence-gathering exercise, not a list of titles. Every record handed back must come from a tool call in this session; every reference must be produced by `paper_cite` or `zotero_export`, never typed from memory.
 
-## 0. Preflight — what is actually reachable
+## 0. Tier gate — ask before searching
+
+**Every search run begins with one question: which coverage tier (§2c).** Do not pick it silently for the user, and do not fire a first query "to get a feel" — the tier fixes the budgets for the whole run, and changing it halfway means redoing the search.
+
+Call `ask_user_question` once, with the three options and what each buys:
+
+| Option | What it buys | Cost |
+|---|---|---|
+| **L1 focused** — recommended for one specific question | ≤3 dimensions, 60–110 unique records, 15 screened, 5 read in full | minutes; ≤6 index calls |
+| **L2 field survey** — recommended when the ask is "survey this area" | 3–5 dimensions, 200–350 records, 60 screened, 15 read | tens of minutes; ≤18 index calls; subagents useful |
+| **L3 comprehensive** — for a review or a thesis proposal | 6–8 dimensions across 2–3 subagents, 500–800 records, 150 screened, 40 read | long run; ≤40 index calls; browser still ≤2 concurrent |
+
+Ask in the user's language and include the expected record count, because that is the real decision: a 15-paper screen cannot support an area-wide claim.
+
+Skip the question **only** when the user already named a tier ("做个 L2 调研", "尽可能全" → propose L2 or L3 in one line and confirm), or when the request is not a search at all (a single DOI/title lookup is `paper_get`, a reference check is `reference_verify`). Record the chosen tier in the report's first line.
+
+## 0a. Preflight — what is actually reachable
 
 Check before promising anything:
 
@@ -81,7 +97,7 @@ Stop and write the report when any budget is exhausted **or** two consecutive st
 
 ### 2c. Scaling the budget to the question
 
-The table above is a **focused run**: one question, roughly 60–110 unique records after dedup, 15 screened on abstracts, 5 read in full. That is not enough for a field survey. Pick the tier deliberately and state it in the report:
+The tier is fixed at the gate in §0, never chosen silently here. The table above is **L1 focused** — one question, 60–110 unique records after dedup, 15 screened on abstracts, 5 read in full — and that is not enough for a field survey. State the chosen tier in the report's first line and take the whole budget from this table:
 
 | Tier | Dimensions | Index calls | Scholar | CNKI | Citation rounds | Screened | Full text | Code searches | Expected unique records |
 |---|---|---|---|---|---|---|---|---|---|
