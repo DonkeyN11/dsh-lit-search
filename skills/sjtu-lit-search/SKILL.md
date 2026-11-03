@@ -61,7 +61,25 @@ Useful filters: `year_from`, `open_access`, `sort="citations"` for the seminal s
 
 For Chinese literature: `paper_search` with `sources=["cnki"]` and a **Chinese** query, one query at a time (browser window, 10–20 s). Results are records only — do not web-fetch a CNKI link, it returns a check page.
 
-## 3. Citation chase (one or two rounds)
+## 2b. Search budget and stop rules
+
+A run is **not** "query every source in parallel and merge", and it does **not** stop when it feels sufficient. It stops when one of these is met, and the report says which:
+
+| Budget | Limit per run |
+|---|---|
+| Keyword dimensions | ≤3 (each = one Layer-1 × Layer-2 combination) |
+| Open-index calls (`paper_search` over the API sources) | ≤6 |
+| Google Scholar queries | ≤3, serial, one at a time |
+| CNKI queries | ≤2, serial, Chinese |
+| arXiv | ≤1 per query; serialised ≥3 s; on 429 wait 60 s and retry once |
+| Citation rounds | ≤2; stop early when the last round adds <20 % new unique records |
+| Shortlist for abstract read | ≤15 |
+| Full-text reads | ≤5 (outline first, then one section or a query) |
+| Library / publisher full-text fetches | ≤5, serial, only for shortlisted paywalled papers |
+
+Stop and write the report when any budget is exhausted **or** two consecutive steps add nothing new. Record what was not covered ("dimension X was dropped at the Scholar budget", "arXiv unavailable during the run") instead of silently continuing.
+
+
 
 For the 3–5 seed papers that define the area:
 
