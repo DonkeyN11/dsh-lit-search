@@ -79,6 +79,20 @@ A run is **not** "query every source in parallel and merge", and it does **not**
 
 Stop and write the report when any budget is exhausted **or** two consecutive steps add nothing new. Record what was not covered ("dimension X was dropped at the Scholar budget", "arXiv unavailable during the run") instead of silently continuing.
 
+### 2c. Scaling the budget to the question
+
+The table above is a **focused run**: one question, roughly 60–110 unique records after dedup, 15 screened on abstracts, 5 read in full. That is not enough for a field survey. Pick the tier deliberately and state it in the report:
+
+| Tier | Dimensions | Index calls | Scholar | CNKI | Citation rounds | Screened | Full text | Code searches | Expected unique records |
+|---|---|---|---|---|---|---|---|---|---|
+| **L1 focused** (default) | ≤3 | ≤6 | ≤3 | ≤2 | ≤2 | ≤15 | ≤5 | ≤2 | 60–110 |
+| **L2 field survey** | 3–5 | ≤18 | ≤6 | ≤4 | ≤3 | ≤60 | ≤15 | ≤6 | 200–350 |
+| **L3 comprehensive** | 6–8, split across 2–3 subagents | ≤40 | ≤10 | ≤6 | ≤4 | ≤150 | ≤40 | ≤12 | 500–800 |
+
+Rules for raising the tier: a written scope (the dimensions and the inclusion/exclusion criteria) comes first; each subagent owns disjoint dimensions and its own sub-budget; the stagnation stop still applies per dimension; and the report must say which tier was run, so a reader knows the coverage it implies. Raising the budget buys coverage — not permission to search without end.
+
+
+
 
 
 For the 3–5 seed papers that define the area:
@@ -88,6 +102,16 @@ For the 3–5 seed papers that define the area:
 - `paper_citations direction="related"` — neighbours the keyword search may have missed.
 
 Stop after two rounds or when new hits stop adding distinct papers. Deduplicate by DOI, then arXiv id, then PMID, then normalised title.
+
+## 3b. Codebase discovery (GitHub)
+
+A literature survey of an applied field is incomplete without the implementations that make the papers reproducible, and reviewers increasingly ask for them.
+
+- **Source**: GitHub REST search, e.g. `https://api.github.com/search/repositories?q=%22map+matching%22+in:name,description&sort=stars`. Unauthenticated quota is **10 searches per minute** (measured 2026-11-03: 620 hits for "map matching", top `cyang-kth/fmm` 1063★) — so budget the calls, never loop. A `GITHUB_TOKEN` raises the quota; without one, stay within the search budget in §2c.
+- **Two passes**: (a) *citation-traced* — for each shortlisted paper, search its title, method acronym and first author; (b) *platform* — search the task keywords with a language filter for the ones the papers did not cover.
+- **Map paper → repository** only on evidence: the README or the repo description must name the paper, the method, or the exact dataset. A shared keyword is not a match.
+- **Quality score** each repo: stars, last commit (flag > 18 months), license, presence of tests/CI, and whether a reproducible entry point exists.
+- **Report** a code table (paper, repo, stars, last commit, license, what it implements) and mark papers with no public implementation as "no public code found" — an empty result is a finding, not a failure.
 
 ## 4. Screen, then read
 
